@@ -1,0 +1,88 @@
+{
+  "commands": [
+    {
+      "id": "init",
+      "name": "发送初始化序列",
+      "method": "send_init_sequence",
+      "description": "发送完整的初始化序列：STATUS -> REBOOTED -> NETWORK_STATUS(0->1->2)",
+      "confirm": false
+    },
+    {
+      "id": "status",
+      "name": "发送STATUS",
+      "method": "send_status",
+      "description": "发送SU_STATUS消息（Radio→UB）",
+      "confirm": false
+    },
+    {
+      "id": "rebooted",
+      "name": "发送REBOOTED",
+      "method": "send_rebooted",
+      "description": "发送SU_REBOOTED消息",
+      "confirm": false
+    },
+    {
+      "id": "network",
+      "name": "发送网络状态(连接建立)",
+      "method": "send_network_status",
+      "description": "发送SU_NETWORK_REPLY消息（状态2：连接建立）",
+      "confirm": false
+    },
+    {
+      "id": "version",
+      "name": "查询版本",
+      "method": "send_version_request",
+      "description": "发送SU_VERSION_REQUEST查询",
+      "confirm": false
+    },
+    {
+      "id": "gps_status",
+      "name": "查询GPS状态",
+      "method": "send_gps_status_request",
+      "description": "发送SU_GPS_STATUS_REQUEST查询",
+      "confirm": false
+    },
+    {
+      "id": "gps_position",
+      "name": "查询GPS位置",
+      "method": "send_gps_position_request",
+      "description": "发送SU_GPS_POSITION_REQUEST查询",
+      "confirm": false
+    },
+    {
+      "id": "gps_time",
+      "name": "查询GPS时间",
+      "method": "send_gps_time_request",
+      "description": "发送SU_GPS_TIME_REQUEST查询",
+      "confirm": false
+    },
+    {
+      "id": "station_id",
+      "name": "查询站点ID",
+      "method": "send_station_id_request",
+      "description": "发送SU_STATION_ID_REQUEST查询",
+      "confirm": false
+    },
+    {
+      "id": "echo",
+      "name": "发送ECHO测试",
+      "method": "send_echo",
+      "description": "发送SU_ECHO回显测试消息",
+      "confirm": false
+    },
+    {
+      "id": "data_ack",
+      "name": "发送数据确认",
+      "method": "send_data_ack",
+      "description": "发送SU_DATA_ACK数据确认消息",
+      "confirm": false
+    },
+    {
+      "id": "reset_ub",
+      "name": "复位UB",
+      "method": "send_reset_ub",
+      "description": "发送SU_RESET_UB复位命令（危险操作）",
+      "confirm": true
+    }
+  ]
+}
