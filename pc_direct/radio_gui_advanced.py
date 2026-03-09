@@ -19,10 +19,14 @@ import threading
 import queue
 import time
 import json
+from pathlib import Path
 from datetime import datetime
 import binascii
 from protocol_parser import ProtocolParser
 from radio_simulator import RadioSimulator
+
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 class RadioGUIAdvanced:
@@ -245,6 +249,7 @@ class RadioGUIAdvanced:
         filename = filedialog.askopenfilename(
             title="选择命令配置文件",
             filetypes=[("JSON文件", "*.json"), ("所有文件", "*.*")],
+            initialdir=str(BASE_DIR),
             initialfile="commands_config.json"
         )
 

@@ -9,6 +9,13 @@
 
 import os
 import sys
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
+DOCS_DIR = BASE_DIR.parent / "docs"
+CONFIG_FILE = BASE_DIR / "commands_config.json"
+GUI_README_FILE = DOCS_DIR / "GUI_README.md"
 
 def print_menu():
     print("\n" + "="*60)
@@ -27,9 +34,9 @@ def print_menu():
     print("   - 命令按钮工具提示")
     print("   - 显示/隐藏原始数据开关")
     print("\n3. 查看配置文件示例")
-    print("   - 打开 commands_config.json")
+    print("   - 打开 pc_direct/commands_config.json")
     print("\n4. 查看完整文档")
-    print("   - 打开 GUI_README.md")
+    print("   - 打开 docs/GUI_README.md")
     print("\n5. 退出")
     print("\n" + "="*60)
 
@@ -59,11 +66,11 @@ def show_config_example():
     print("配置文件示例 (commands_config.json)")
     print("="*60)
     try:
-        with open('commands_config.json', 'r', encoding='utf-8') as f:
+        with CONFIG_FILE.open('r', encoding='utf-8') as f:
             content = f.read()
         print(content)
     except FileNotFoundError:
-        print("错误：找不到 commands_config.json 文件")
+        print(f"错误：找不到 {CONFIG_FILE}")
     except Exception as e:
         print(f"错误：{e}")
     print("\n按Enter键返回...")
@@ -74,17 +81,17 @@ def show_documentation():
     try:
         # Windows
         if sys.platform == 'win32':
-            os.startfile('GUI_README.md')
+            os.startfile(str(GUI_README_FILE))
         # macOS
         elif sys.platform == 'darwin':
-            os.system('open GUI_README.md')
+            os.system(f'open "{GUI_README_FILE}"')
         # Linux
         else:
-            os.system('xdg-open GUI_README.md')
+            os.system(f'xdg-open "{GUI_README_FILE}"')
         print("文档已在默认程序中打开")
     except Exception as e:
         print(f"无法打开文档：{e}")
-        print("请手动打开 GUI_README.md 文件")
+        print(f"请手动打开 {GUI_README_FILE} 文件")
 
 def check_dependencies():
     """检查依赖库"""

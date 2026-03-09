@@ -9,7 +9,7 @@ import os
 import binascii
 
 class ProtocolParser:
-    def __init__(self, port='COM13', baudrate=38400):
+    def __init__(self, port='COM4', baudrate=38400):
         self.port = port
         self.baudrate = baudrate
         self.ser = None
