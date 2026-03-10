@@ -244,6 +244,47 @@ peps/
   - `crc_ok`
 - 这些字段已经足够支撑第一版网页日志展示；后续只需补充 `ts` 时间戳即可。
 
+### 网页版当前状态（已打通）
+- 当前网页主线脚本为 `esp32_bridge/ubradio_web.py`。
+- 第一版网页已从“手写 socket HTTP 服务”切换为 `adafruit_httpserver` 实现。
+- 切换原因：
+  - 手写 socket 版本在 ESP32 / CircuitPython 上反复遇到 `ETIMEDOUT`、`EAGAIN`、部分响应发送、请求读取不完整等问题
+  - 这些问题属于 HTTP/socket 细节，不值得在本项目中重复造轮子
+- 当前网页版本已成功实测：
+  - 浏览器可访问 ESP32 页面
+  - 点击 `Version` 后可正确发出 `V` 并收到 `v / V02.01`
+  - 点击 `GPS Status` 后可正确发出 `G` 并收到 `g / 00`
+  - 页面下方文本日志框可显示：
+    - 时间戳
+    - `TX/RX`
+    - `type`
+    - `length`
+    - `crc`
+    - `ascii`
+    - `hex`
+    - `raw`
+
+### 第一版网页交互边界（更新）
+- 第一版页面定位为“手动调试页”，不是自动采集前端。
+- 当前页面仅支持手动操作：
+  - 手动点命令按钮
+  - 手动 `Refresh`
+  - 手动 `Clear Logs`
+- 页面内不再做自动定时刷新，避免对 ESP32 小型 HTTP 服务造成无意义压力。
+- 若后续确实需要高频轮询，应由 PC 侧单独脚本或程序去请求 `/api/logs`，而不是让页面自己 `setInterval(...)`。
+
+### 官方库安装方式
+- 当前网页依赖 `adafruit_httpserver`。
+- 推荐按官方方式安装：
+  - `py -m pip install circup`
+  - `circup install adafruit_httpserver`
+- 也可按官方 Bundle 方式手动安装：
+  - 从 `https://circuitpython.org/libraries` 下载对应版本的 Bundle
+  - 将 `lib/adafruit_httpserver/` 拷入板子的 `CIRCUITPY/lib/`
+- 板上 Wi-Fi 配置使用 `settings.toml`：
+  - `CIRCUITPY_WIFI_SSID="..."`
+  - `CIRCUITPY_WIFI_PASSWORD="..."`
+
 ### CircuitPython 兼容性补记
 - 在 ESP32 / CircuitPython 上，`bytearray` 的切片删除能力与桌面 Python 不完全一致。
 - 曾在重构 `poll_uart_once()` 时使用 `del rx_buffer[:]`，在板子上触发：
@@ -259,10 +300,10 @@ peps/
   - 网页层只调用已有接口发送命令、轮询日志并展示结果
 - 第一版网页仅实现固定调试功能：
   - 固定命令按钮：`V/G/P/M/E/U`
-  - 自动刷新日志
+  - 手动刷新日志
   - 显示 TX/RX、原始 hex、CRC、解析内容
-- 第一版允许使用“PC/网页端高频轮询”来近似持续采集：
-  - 只要网页持续访问，效果上接近后台采集
+- 第一版允许使用“PC 侧外部程序高频轮询”来近似持续采集：
+  - 只要有外部程序持续访问日志接口，效果上接近后台采集
   - 暂不要求 ESP32 在无人访问时也持续常驻采集
 - 若后续确有需要，再增加常驻后台轮询与更完整的服务模式。
 

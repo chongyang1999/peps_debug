@@ -42,6 +42,8 @@ def _ascii_repr(data):
 
 
 def _add_log(entry):
+    if "ts" not in entry:
+        entry["ts"] = time.monotonic()
     logs.append(entry)
     if len(logs) > MAX_LOGS:
         del logs[0]
