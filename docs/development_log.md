@@ -182,4 +182,88 @@ peps/
 
 ---
 
+## 补充实测结论（后续整理补记）
+
+### 实际硬件链路说明
+- 之前文档里写的“PC 直接连接 UB Radio 口”，实际调试链路并不是 PC 直接接 RS-232 裸线。
+- 实际可工作的链路是：**PC -> MM232R USB-UART -> MAX3232 电平转换 -> UB Radio RS-232 口**。
+- 后续引入 ESP32 时，本质上是用 **ESP32 + MAX3232** 去替换原来 PC 侧的 **MM232R + MAX3232** 串口适配路径，而不是改变 UB 侧协议。
+- 这一点与 `archive/uart_tcp_proxy/TEST_NOTES.md` 中的记录一致：`RS-232 via MAX3232/MM232R, 38400 8N1`。
+
+### 空闲状态周期包
+- 历史抓包样本显示，UB 在空闲/启动后会周期性发出 `TYPE='N'` 的网络状态包。
+- 已保存的样本时间点分别为：
+  - `2025-07-08 14:54:19`
+  - `2025-07-08 15:04:19`
+  - `2025-07-08 15:14:20`
+  - `2025-07-08 15:24:20`
+- 因此当前可认为：**默认 idle/周期性 `N` 包的发送周期约为 10 分钟**。
+- 该结论来自实测抓包，不是协议文档中明确写死的配置项；后续若抓到更多样本，应继续校正。
+
+### ESP32 串口协议脚本当前状态
+- 当前主线脚本为 `esp32_bridge/ubradio_decode.py`。
+- 该脚本已经整理为“协议核心 + REPL 可调用接口”的形式，保留了原有协议实现：
+  - `calculate_crc()`
+  - `pack_frame()`
+  - `parse_frame()`
+- 在此基础上新增并验证了以下接口：
+  - `send_command(cmd, payload=b"")`
+  - `q(cmd, payload=b"")`
+  - `poll_uart_once()`
+  - `read_frames(timeout_ms=...)`
+  - `get_logs()`
+  - `clear_logs()`
+- 当前接收侧已是“非阻塞轮询”模式：
+  - `poll_uart_once()` 无数据时立即返回
+  - 有数据时读取 UART、解析完整帧并写入 `logs`
+  - 这为后续网页轮询提供了直接复用点
+
+### 当前 REPL 实测结果
+- `send_command("V") + read_frames(1000)` 已验证成功：
+  - 发送 `TYPE='V'`
+  - 收到 `TYPE='v'`
+  - 返回内容：`V02.01`
+- `q("G") + rx_loop()` 已验证成功：
+  - 收到 `TYPE='g'`
+  - 数据 `00`
+  - 当前解释为 GPS invalid
+- `q("E", b"PING") + rx_loop()` 已验证成功：
+  - 收到 `TYPE='e'`
+  - 当前固件行为是仅回 ACK，不回显 payload
+
+### 当前日志结构
+- `get_logs()` 现已返回结构化日志项，字段包括：
+  - `dir`
+  - `type`
+  - `raw_hex`
+  - `length`
+  - `data_hex`
+  - `data_ascii`
+  - `recv_crc`
+  - `calc_crc`
+  - `crc_ok`
+- 这些字段已经足够支撑第一版网页日志展示；后续只需补充 `ts` 时间戳即可。
+
+### CircuitPython 兼容性补记
+- 在 ESP32 / CircuitPython 上，`bytearray` 的切片删除能力与桌面 Python 不完全一致。
+- 曾在重构 `poll_uart_once()` 时使用 `del rx_buffer[:]`，在板子上触发：
+  - `TypeError: 'bytearray' object doesn't support item deletion`
+- 当前已改为直接重建缓冲区：
+  - `rx_buffer = bytearray(remaining)`
+- 结论：后续写 CircuitPython 代码时，应优先使用“整体重建对象”的方式，而不是依赖 CPython 风格的原地切片删除。
+
+### 第一版网页方案边界
+- 第一版网页方案不重写串口协议栈，也不在网页端重复实现 CRC/解包。
+- 设计原则是：
+  - ESP32 继续使用 `ubradio_decode.py` 作为协议与 UART 核心
+  - 网页层只调用已有接口发送命令、轮询日志并展示结果
+- 第一版网页仅实现固定调试功能：
+  - 固定命令按钮：`V/G/P/M/E/U`
+  - 自动刷新日志
+  - 显示 TX/RX、原始 hex、CRC、解析内容
+- 第一版允许使用“PC/网页端高频轮询”来近似持续采集：
+  - 只要网页持续访问，效果上接近后台采集
+  - 暂不要求 ESP32 在无人访问时也持续常驻采集
+- 若后续确有需要，再增加常驻后台轮询与更完整的服务模式。
+
 *最后更新：2025-07-10*

@@ -28,3 +28,27 @@ python pc_direct/ppp_gui.py
 
 - 日常调试 `radio` 口时使用 `pc_direct/`。
 - 新开发优先放在 `esp32_bridge/`，围绕 PC -> ESP32 -> UB 这条链路推进。
+
+## ESP32 当前状态
+
+- 当前已经验证 `esp32_bridge/ubradio_decode.py` 可在 CircuitPython REPL 下完成：
+  - 发送命令帧 `send_command("V")`
+  - 非阻塞轮询接收 `read_frames(...)`
+  - 获取结构化日志 `get_logs()`
+- 已确认的实测结果：
+  - `V -> v`，返回版本字符串 `V02.01`
+  - `G -> g`，当前实测返回 `00`，表示 GPS 无效
+  - `E -> e`，当前固件仅返回 ACK，不回显 payload
+- 当前 `logs` 已包含网页展示所需的大部分字段：
+  - `dir`、`type`、`raw_hex`、`data_hex`、`data_ascii`
+  - `recv_crc`、`calc_crc`、`crc_ok`、`length`
+
+## 第一版网页方案
+
+- 第一版目标不是重写协议栈，而是在 `esp32_bridge/ubradio_decode.py` 现有接口外包一层极简网页。
+- ESP32 端保留现有协议/串口逻辑，只补少量展示需要的信息，例如时间戳。
+- 网页端只做固定功能：
+  - 固定命令按钮，例如 `V/G/P/M/E/U`
+  - 周期性刷新日志
+  - 显示 TX/RX、原始 hex、解析结果和 CRC
+- 第一版可接受“由网页高频轮询近似持续采集”的方式，不强求 ESP32 在无人访问时也持续后台采集。
